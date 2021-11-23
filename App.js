@@ -6,8 +6,11 @@ import Vue2 from "./src/screens/vue2";
 import { NavigationContainer, useFocusEffect } from "@react-navigation/native";
 import { createStackNavigator } from "@react-navigation/stack";
 import * as Font from "expo-font";
-
 import * as SQLite from "expo-sqlite";
+import { Provider, connect } from "react-redux";
+import store from "./src/redux/Store/configureStore";
+import { persistStore } from "redux-persist";
+import { PersistGate } from "redux-persist/integration/react";
 
 const AuthContext = React.createContext();
 
@@ -40,10 +43,16 @@ export default class App extends React.Component {
 
   render() {
     const AppView = () => {
+      let persistor = persistStore(store);
+
       return (
-        <NavigationContainer>
-          <VueStack />
-        </NavigationContainer>
+        <Provider store={store}>
+          <PersistGate loading={null} persistor={persistor}>
+            <NavigationContainer>
+              <VueStack />
+            </NavigationContainer>
+          </PersistGate>
+        </Provider>
       );
     };
 

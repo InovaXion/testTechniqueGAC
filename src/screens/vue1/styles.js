@@ -6,7 +6,6 @@ const hauteur = height;
 const largeur = width;
 
 const styles = StyleSheet.create({
-
   item: {
     height: 70,
     borderBottomWidth: 0.5,
@@ -30,6 +29,12 @@ const styles = StyleSheet.create({
   itemDate: {
     fontSize: 16,
     width: "50%",
+  },
+
+  actionsBox: {
+    right: 0,
+    position: "absolute",
+    flexDirection: "row",
   },
 });
 

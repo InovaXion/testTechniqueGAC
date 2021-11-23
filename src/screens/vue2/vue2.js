@@ -15,6 +15,7 @@ import colors from "../../colors/variable";
 import CustomIcon from "../../components/CustomIcon";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
+import { connect } from "react-redux";
 import {
   LocaleConfig,
   Calendar,
@@ -70,7 +71,7 @@ const { width, height } = Dimensions.get("screen");
 const hauteur = height;
 const largeur = width;
 
-export default class Vue2 extends React.Component {
+class Vue2 extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
@@ -81,9 +82,11 @@ export default class Vue2 extends React.Component {
   }
 
   async componentDidMount() {
-    var data = await AsyncStorage.getItem("data");
+    if (this.props.route.params) {
+      this.setState({ mileageId: this.props.route.params.mileageId });
+    }
 
-    data = JSON.parse(data);
+    var data = this.props.mileage;
 
     let highestId = data.slice().sort((a, b) => a.id - b.id)[
       data.length - 1
@@ -96,6 +99,11 @@ export default class Vue2 extends React.Component {
   }
 
   componentWillUnmount() {}
+
+  _addOrUpdateMileage(item) {
+    const action = { type: "ADD_OR_UPDATE_MILEAGE", value: item };
+    this.props.dispatch(action);
+  }
 
   render() {
     var onDayPress = (day) => {
@@ -266,7 +274,7 @@ export default class Vue2 extends React.Component {
             }}
             onPress={async () => {
               if (!this.state.daySelected || !this.state.itemValue) {
-                Alert.alert("Erreur", "Vous devez remplir tout les champs", [
+                Alert.alert("Erreur", "Vous devez remplir tous les champs", [
                   {
                     text: "Ok",
                     onPress: () => console.log("Cancel"),
@@ -274,25 +282,47 @@ export default class Vue2 extends React.Component {
                   },
                 ]);
               } else {
-                const newData = [
-                  ...this.state.mileage_readings,
-                  {
-                    id: this.state.highestId + 1,
-                    issued_on: this.state.daySelected.dateString,
-                    value: this.state.itemValue,
-                  },
-                ];
+                let mileage = {};
 
-                await AsyncStorage.setItem("data", JSON.stringify(newData));
+                // Si modification :
+                if (this.state.mileageId) {
+                  mileage.id = this.state.mileageId;
+                } else {
+                  mileage.id = this.state.highestId + 1;
+                }
 
-                this.props.navigation.navigate("Vue1", { data: newData });
+                mileage.issued_on = this.state.daySelected.dateString;
+                mileage.value = this.state.itemValue;
+                console.log(mileage);
+
+                await this._addOrUpdateMileage(mileage);
+
+                this.props.navigation.navigate("Vue1");
               }
             }}
           >
-            <Text style={{ color: "white" }}>Ajouter</Text>
+            {this.state.mileageId ? (
+              <Text style={{ color: "white" }}>Modifier</Text>
+            ) : (
+              <Text style={{ color: "white" }}>Ajouter</Text>
+            )}
           </TouchableOpacity>
         </View>
       </View>
     );
   }
 }
+
+const mapStateToProps = (state) => {
+  return state;
+};
+
+const mapDispatchToProps = (dispatch) => {
+  return {
+    dispatch: (action) => {
+      dispatch(action);
+    },
+  };
+};
+
+export default connect(mapStateToProps, mapDispatchToProps)(Vue2);

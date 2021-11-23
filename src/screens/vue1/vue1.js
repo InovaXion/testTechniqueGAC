@@ -13,13 +13,15 @@ import { Button } from "react-native-paper";
 import colors from "../../colors/variable";
 import CustomIcon from "../../components/CustomIcon";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { connect } from "react-redux";
 
 const { width, height } = Dimensions.get("screen");
+const window = Dimensions.get("window");
 
 const hauteur = height;
 const largeur = width;
 
-export default class Vue1 extends React.Component {
+class Vue1 extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
@@ -28,20 +30,25 @@ export default class Vue1 extends React.Component {
   }
 
   async componentDidMount() {
+    this.setState({ mileage_readings: this.props.mileage });
+  }
 
-
-    var data = await AsyncStorage.getItem("data");
-    if (!data) {
-      var data = require("../../../assets/json/mileage_readings.json");
-      await AsyncStorage.setItem("data", JSON.stringify(data.mileage_readings));
-    } else {
-      data = JSON.parse(data);
-    }
-
-    this.setState({ mileage_readings: data });
+  async componentDidUpdate() {
+    await this.setState({ mileage_readings: this.props.mileage });
   }
 
   componentWillUnmount() {}
+
+  _ReiniMileage() {
+    const action = { type: "REINI_MILEAGE", value: null };
+    this.props.dispatch(action);
+  }
+
+  _RemoveMileage(item) {
+    console.log(item);
+    const action = { type: "REMOVE_MILEAGE", value: item };
+    this.props.dispatch(action);
+  }
 
   emptyDatas = () => {
     return (
@@ -83,6 +90,59 @@ export default class Vue1 extends React.Component {
             <View style={styles.itemInfos}>
               <Text style={styles.itemDate}>{formatDate(issued_on)}</Text>
               <Text style={styles.itemDate}>{value}</Text>
+              <View style={styles.actionsBox}>
+                <TouchableOpacity
+                  style={{
+                    backgroundColor: colors.bleuFonce,
+                    borderRadius: 65,
+                    width: 40,
+                    height: 40,
+                    alignItems: "center",
+                    justifyContent: "center",
+                    zIndex: 2,
+                    marginHorizontal: 5,
+                  }}
+                  onPress={async () => {
+                    this.props.navigation.navigate("Vue2", {
+                      mileageId: id,
+                      mileageDate: issued_on,
+                    });
+                  }}
+                >
+                  <CustomIcon
+                    name="Loupe"
+                    fill={"white"}
+                    height={30}
+                    width={30}
+                    viewBox="0 0 30 30"
+                  />
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={{
+                    backgroundColor: colors.bleuFonce,
+                    borderRadius: 65,
+                    width: 40,
+                    height: 40,
+                    alignItems: "center",
+                    justifyContent: "center",
+                    zIndex: 2,
+                    marginHorizontal: 5,
+                  }}
+                  onPress={async () => {
+                    let mileage = {};
+                    mileage.id = item.id;
+                    await this._RemoveMileage(mileage);
+                  }}
+                >
+                  <CustomIcon
+                    name="Close"
+                    fill={"white"}
+                    height={30}
+                    width={30}
+                    viewBox="0 0 30 30"
+                  />
+                </TouchableOpacity>
+              </View>
             </View>
             <TouchableOpacity
               onPress={() => {}}
@@ -105,7 +165,7 @@ export default class Vue1 extends React.Component {
       >
         <View
           style={{
-            height: "100%",
+            height: "80%",
             width: "90%",
             alignSelf: "center",
             backgroundColor: "white",
@@ -126,37 +186,16 @@ export default class Vue1 extends React.Component {
             elevation: 3,
           }}
         >
-          <TouchableOpacity
-            style={{
-              backgroundColor: colors.bleuFonce,
-              borderRadius: 65,
-              width: 65,
-              height: 65,
-              alignItems: "center",
-              justifyContent: "center",
-              marginTop: 25,
-              position: "absolute",
-              bottom: hauteur - hauteur / 1.2,
-              right: 25,
-              zIndex: 2,
-            }}
-            onPress={async () => {
-              this.props.navigation.navigate("Vue2");
-            }}
-          >
-            <CustomIcon
-              name="Favoris"
-              fill={"white"}
-              height={50}
-              width={50}
-              viewBox="0 0 50 50"
-            />
-          </TouchableOpacity>
-
           <View style={{ padding: 10 }}>
+            <Text
+              style={{ alignSelf: "center", fontSize: 32, marginBottom: 30 }}
+            >
+              Relevés Kilométriques
+            </Text>
+
             <View style={styles.itemInfos}>
               <Text style={styles.itemTitle}>Date</Text>
-              <Text style={styles.itemTitle}>Valeur</Text>
+              <Text style={styles.itemTitle}>Valeur (kms)</Text>
             </View>
           </View>
 
@@ -170,11 +209,81 @@ export default class Vue1 extends React.Component {
             }}
             style={{
               width: "100%",
-              height: "80%",
+              height:
+                window.height < 670
+                  ? "42%"
+                  : window.height < 870
+                  ? "53%"
+                  : window.height > 1000
+                  ? "69%"
+                  : "60%",
             }}
           />
         </View>
+
+        <TouchableOpacity
+          style={{
+            backgroundColor: colors.bleuFonce,
+            borderRadius: 65,
+            width: 65,
+            height: 65,
+            alignItems: "center",
+            justifyContent: "center",
+            marginTop: 25,
+            position: "absolute",
+            bottom: 10,
+            right: 25,
+            zIndex: 2,
+          }}
+          onPress={async () => {
+            this.props.navigation.navigate("Vue2");
+          }}
+        >
+          <CustomIcon
+            name="Favoris"
+            fill={"white"}
+            height={50}
+            width={50}
+            viewBox="0 0 50 50"
+          />
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={{
+            backgroundColor: colors.bleuFonce,
+            borderRadius: 65,
+            width: 65,
+            height: 65,
+            alignItems: "center",
+            justifyContent: "center",
+            marginTop: 25,
+            position: "absolute",
+            bottom: 10,
+
+            left: 25,
+            zIndex: 2,
+          }}
+          onPress={async () => {
+            await this._ReiniMileage();
+          }}
+        >
+          <Text style={{ color: "white" }}>Reinitiliser</Text>
+        </TouchableOpacity>
       </View>
     );
   }
 }
+
+const mapStateToProps = (state) => {
+  return state;
+};
+
+const mapDispatchToProps = (dispatch) => {
+  return {
+    dispatch: (action) => {
+      dispatch(action);
+    },
+  };
+};
+
+export default connect(mapStateToProps, mapDispatchToProps)(Vue1);
